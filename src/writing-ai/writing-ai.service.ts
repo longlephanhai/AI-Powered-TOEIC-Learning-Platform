@@ -16,33 +16,33 @@ export class WritingAiService {
     const { title, description, content, level, minWords, maxWords } = promptDto;
 
     if (!content || content.trim() === "") {
-      throw new Error("Content cannot be empty");
+      throw new Error("Nội dung không được để trống");
     }
 
     const instruction = `
-You are an advanced English writing evaluator for TOEIC and business contexts.
+Bạn là một chuyên gia đánh giá kỹ năng viết tiếng Anh nâng cao, chuyên về TOEIC và môi trường kinh doanh.
 
-Evaluate the following essay carefully and return detailed feedback.
+Hãy đánh giá bài luận sau một cách cẩn thận và đưa ra phản hồi chi tiết.
 
-Essay metadata:
-- Title: ${title}
-- Description: ${description}
-- Level: ${level || "Unknown"}
-- Expected word range: ${minWords || "?"}–${maxWords || "?"}
+Thông tin bài luận:
+- Tiêu đề: ${title}
+- Mô tả: ${description}
+- Trình độ: ${level || "Chưa xác định"}
+- Số từ mong đợi: ${minWords || "?"}–${maxWords || "?"}
 
-Essay content:
+Nội dung bài luận:
 """${content}"""
 
-Return the result strictly in JSON format with this structure:
+Trả kết quả **chỉ** dưới định dạng JSON với cấu trúc sau:
 {
-  "overallFeedback": "string",
+  "overallFeedback": "string",  // Nhận xét tổng quan
   "grammarErrors": [
     { "original": "string", "correction": "string", "explanation": "string" }
   ],
   "vocabularySuggestions": [
     { "word": "string", "suggestion": "string", "reason": "string" }
   ],
-  "structureFeedback": "string",
+  "structureFeedback": "string", 
   "score": {
     "grammar": number,
     "vocabulary": number,
@@ -50,13 +50,13 @@ Return the result strictly in JSON format with this structure:
     "taskResponse": number,
     "overall": number
   },
-  "improvedVersion": "string"
+  "improvedVersion": "string" 
 }
 
-Guidelines:
-- Be concise but precise.
-- Always include at least 1 example for grammar and vocabulary feedback.
-- If the essay is excellent, still give at least one suggestion for improvement.
+Hướng dẫn:
+- Ngắn gọn nhưng chính xác.
+- Luôn đưa ít nhất 1 ví dụ về lỗi ngữ pháp và từ vựng.
+- Nếu bài luận xuất sắc, vẫn đưa ít nhất một gợi ý cải thiện.
 `;
 
     const result = await this.genAiProModel.generateContent({
@@ -80,10 +80,11 @@ Guidelines:
     try {
       return JSON.parse(jsonString);
     } catch (error) {
-      console.warn("AI output not valid JSON, returning raw text.");
+      console.warn("Kết quả AI không phải JSON hợp lệ, trả về text gốc.");
       return { overallFeedback: rawText };
     }
   }
+
 
 
 
@@ -93,7 +94,6 @@ Guidelines:
       throw new Error('Prompt and imageBase64 are required');
     }
 
-    // Nếu có tiền tố "data:image/png;base64," thì cắt đi
     const base64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
 
     const result = await this.genAiProModel.generateContent({
@@ -113,7 +113,6 @@ Guidelines:
       ],
     });
 
-    // Phần response trả về có thể nằm trong `result.response`
     const response = await result.response;
     const text = response.text();
     return text;
