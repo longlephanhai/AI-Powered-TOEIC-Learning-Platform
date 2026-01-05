@@ -177,8 +177,6 @@ Lưu ý quan trọng:
 `;
 
 
-
-
     const result = await this.genAiProModel.generateContent({
       contents: [
         {
@@ -186,10 +184,6 @@ Lưu ý quan trọng:
           parts: [{ text: prompt }],
         },
       ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1500,
-      },
     });
 
     const rawText = result.response.text();
@@ -201,11 +195,13 @@ Lưu ý quan trọng:
         ? rawText.slice(jsonStart, jsonEnd + 1)
         : rawText;
 
+    console.log('AI Output:', jsonString);
+
     try {
       const adviceList = JSON.parse(jsonString);
       return adviceList;
     } catch (error) {
-      console.warn('⚠️ AI output not valid JSON, returning empty array.');
+      console.warn('AI output not valid JSON, returning empty array.');
       return [];
     }
   }
