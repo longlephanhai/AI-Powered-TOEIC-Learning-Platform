@@ -1,79 +1,118 @@
 import { Injectable } from '@nestjs/common';
-import { OpenAI } from 'openai';
-import * as textToSpeech from '@google-cloud/text-to-speech';
 import { ConfigService } from '@nestjs/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 
 @Injectable()
 export class SpeakingAiService {
-  private openai: OpenAI;
-  private ttsClient: textToSpeech.TextToSpeechClient;
-  private apiKey: string;
+  private genAI: GoogleGenerativeAI;
+  private genAiProModel: any;
+  private ttsClient: TextToSpeechClient;
 
-  private conversationHistory: { role: 'system' | 'user' | 'assistant'; content: string }[] = [];
+  private conversationHistory: {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+  }[] = [];
 
   constructor(private configService: ConfigService) {
-    this.apiKey = this.configService.get<string>('OPENAI_API_KEY')!;
-    this.openai = new OpenAI({ apiKey: this.apiKey });
-    this.ttsClient = new textToSpeech.TextToSpeechClient();
+    // Gemini
+    this.genAI = new GoogleGenerativeAI(
+      this.configService.get<string>('API_GEMINI_KEY')!,
+    );
+
+    this.genAiProModel = this.genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview',
+    });
+
+    // ✅ FIX QUAN TRỌNG
+    this.ttsClient = new TextToSpeechClient();
+  }
+
+  private buildPrompt(): string {
+    return this.conversationHistory
+      .map((msg) => {
+        if (msg.role === 'system') return msg.content;
+        if (msg.role === 'user') return `Learner: ${msg.content}`;
+        return `Teacher: ${msg.content}`;
+      })
+      .join('\n');
   }
 
   async startConversation(topic: string): Promise<string> {
-    if (!topic) return 'Please provide a topic so we can begin our conversation.';
+    if (!topic) {
+      return 'Please provide a topic so we can begin our conversation.';
+    }
+
     this.conversationHistory = [
       {
         role: 'system',
         content: `
 You are an English speaking coach helping a learner practice conversation on the topic "${topic}".
-Your goal is to guide them step-by-step.
 
-1. Start by asking one very simple question about this topic (e.g., yes/no or short answer).  
-2. Wait for their reply, then ask a slightly more complex question related to the same topic.  
-3. Continue asking deeper or more detailed questions each time — gradually increasing difficulty.  
-4. Always ask only ONE question at a time.  
-5. Correct grammar or vocabulary gently when needed and give a better way to say it.  
-6. Encourage natural conversation — keep it engaging and friendly.  
-7. Never mention that you are an AI. Speak as a real human teacher.
-`
-      }
+Rules:
+1. Start with ONE very simple question.
+2. Increase difficulty gradually.
+3. Ask only ONE question at a time.
+4. Correct grammar gently and suggest better expressions.
+5. Encourage natural conversation.
+6. Never mention you are an AI. Speak like a real teacher.
+`,
+      },
     ];
 
-
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: this.conversationHistory,
-      max_tokens: 50,
+    const result = await this.genAiProModel.generateContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: this.buildPrompt() }],
+        },
+      ],
     });
 
-    const message = response.choices?.[0]?.message?.content?.trim() || 'Let’s start our conversation!';
+    const message = result.response.text().trim();
     this.conversationHistory.push({ role: 'assistant', content: message });
+
     return message;
   }
 
-  async getChatGptResponse(text: string): Promise<string> {
-    this.conversationHistory.push({ role: 'user', content: text });
-
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: this.conversationHistory,
-      max_tokens: 60,
+  async getGeminiResponse(userText: string): Promise<string> {
+    this.conversationHistory.push({
+      role: 'user',
+      content: userText,
     });
 
-    const message = response.choices?.[0]?.message?.content?.trim();
-    if (!message) throw new Error('No valid response from GPT');
+    const result = await this.genAiProModel.generateContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: this.buildPrompt() }],
+        },
+      ],
+    });
 
-    this.conversationHistory.push({ role: 'assistant', content: message });
+    const message = result.response.text().trim();
+    if (!message) throw new Error('No response from Gemini');
+
+    this.conversationHistory.push({
+      role: 'assistant',
+      content: message,
+    });
+
     return message;
   }
 
   async convertTextToSpeech(text: string): Promise<Buffer> {
     const [response] = await this.ttsClient.synthesizeSpeech({
       input: { text },
-      voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
-      audioConfig: { audioEncoding: 'MP3' },
+      voice: {
+        languageCode: 'en-US',
+        ssmlGender: 'NEUTRAL',
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+      },
     });
-    if (!Buffer.isBuffer(response.audioContent)) {
-      throw new Error('Invalid audio content');
-    }
-    return response.audioContent;
+
+    return Buffer.from(response.audioContent as Uint8Array);
   }
 }

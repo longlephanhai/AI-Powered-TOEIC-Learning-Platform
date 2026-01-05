@@ -5,13 +5,17 @@ import { SpeakingAiService } from './speaking-ai.service';
 
 @Controller('speaking-ai')
 export class SpeakingAiController {
-  constructor(private readonly speakingAiService: SpeakingAiService) { }
+  constructor(private readonly speakingAiService: SpeakingAiService) {}
 
   @Post()
-  @ResponseMessage('Chat GPT response')
+  @ResponseMessage('Gemini speaking response')
   async chat(@Body('text') text: string, @Res() res: express.Response) {
-    const responseText = await this.speakingAiService.getChatGptResponse(text);
-    const audio = await this.speakingAiService.convertTextToSpeech(responseText);
+    const responseText =
+      await this.speakingAiService.getGeminiResponse(text);
+
+    const audio =
+      await this.speakingAiService.convertTextToSpeech(responseText);
+
     res.set('Content-Type', 'application/json');
     res.send({
       text: responseText,
@@ -22,8 +26,12 @@ export class SpeakingAiController {
   @Post('start')
   @ResponseMessage('Start speaking session')
   async start(@Body('topic') topic: string, @Res() res: express.Response) {
-    const firstQuestion = await this.speakingAiService.startConversation(topic);
-    const audio = await this.speakingAiService.convertTextToSpeech(firstQuestion);
+    const firstQuestion =
+      await this.speakingAiService.startConversation(topic);
+
+    const audio =
+      await this.speakingAiService.convertTextToSpeech(firstQuestion);
+
     res.set('Content-Type', 'application/json');
     res.send({
       text: firstQuestion,
