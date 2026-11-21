@@ -1,0 +1,281 @@
+export { };
+
+declare global {
+
+  interface IRequest {
+    url: string;
+    method: string;
+    body?: { [key: string]: any };
+    queryParams?: any;
+    useCredentials?: boolean;
+    headers?: any;
+    nextOption?: any;
+  }
+
+  interface IBackendRes<T> {
+    error?: string | string[];
+    message: string;
+    statusCode: number | string;
+    data?: T;
+  }
+
+  interface IModelPaginate<T> {
+    meta: {
+      current: number;
+      pageSize: number;
+      pages: number;
+      total: number;
+    },
+    result: T[]
+  }
+
+  interface IUser {
+    _id: string;
+    fullName: string;
+    email: string;
+    password?: string;
+    avatar?: string;
+    role: {
+      _id: string;
+      name: string;
+      description?: string;
+      permissions?: string[];
+    } | string;
+    age: number;
+    address: string;
+    phone: number;
+    learningPaths: boolean;
+  }
+
+  interface IRole {
+    _id: string,
+    name: string,
+    description?: string,
+    permissions?: string[],
+    createdBy: {
+      _id: string,
+      email: string
+    },
+  }
+
+  interface IWriting {
+    _id: string;
+    topic: string;
+    title: string;
+    description: string;
+    minWords: number;
+    maxWords: number;
+    level: string;
+    suggestion?: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  interface WritingFeedback {
+    overallFeedback: string;
+    grammarErrors: {
+      original: string;
+      correction: string;
+      explanation: string;
+    }[];
+    vocabularySuggestions: {
+      word: string;
+      suggestion: string;
+      reason: string;
+    }[];
+    structureFeedback: string;
+    score: {
+      grammar: number;
+      vocabulary: number;
+      coherence: number;
+      taskResponse: number;
+      overall: number;
+    };
+    improvedVersion?: string;
+  }
+
+  interface IWritingHistory {
+    _id: string;
+    userId: string;
+    writingId: {
+      _id: string;
+      topic: string;
+      title: string;
+    };
+    content: string;
+    feedback: WritingFeedback;
+  }
+
+  interface ITest {
+    _id: string;
+    title: string;
+    description: string;
+    durationSec: number;
+    isPublic: boolean;
+    totalQuestions: number;
+    parts: IPart[];
+    audioUrl: string;
+  }
+
+  interface IPart {
+    _id: string;
+    partNo: number;
+    name: string;
+    durationSec: number;
+    orderIndex: number;
+    description: string;
+    questions: IQuestion[];
+  }
+
+  interface IQuestion {
+    _id: string;
+    numberQuestion: number;
+    questionContent?: string;
+    options: string[];
+    correctAnswer: string;
+    imageUrl?: string;
+    audioUrl?: string;
+    explanation?: string;
+    category?: string;
+    transcript?: string;
+    reading?: string[];
+  }
+
+  interface ITopicVocabulary {
+    _id: string;
+    topic: string;
+    description: string;
+    vocabularies?: IVocabulary[];
+    updatedAt: string;
+  }
+
+  interface IVocabulary {
+    _id: string;
+    vocab: string;
+    meaning: string;
+    example: string;
+    level: string;
+    pronounce: string;
+    img: string;
+  }
+
+  interface IExamResult {
+    _id: string;
+    testId: string;
+    totalCorrect: number;
+    totalListeningCorrect: number;
+    totalReadingCorrect: number;
+    parts: IPart[];
+    correctAnswer: Record<string, number>;
+    wrongAnswer: Record<string, number>;
+    noAnswer: Record<string, number>;
+    totalScore: number;
+    readingScore: number;
+    listeningScore: number;
+    createdAt: string;
+  }
+
+  interface PartMistakeSummary {
+    [category: string]: number;
+  }
+
+  interface IMistake {
+    part1: PartMistakeSummary;
+    part2: PartMistakeSummary;
+    part3: PartMistakeSummary;
+    part4: PartMistakeSummary;
+    part5: PartMistakeSummary;
+    part6: PartMistakeSummary;
+    part7: PartMistakeSummary;
+  }
+
+  interface IGrammar {
+    _id: string;
+    title: string;
+    content: string;
+  }
+
+  interface ILearningPath {
+    _id: string;
+    title: string;
+    description: string;
+    steps: [
+      {
+        _id: string;
+        title: string;
+        description: string;
+        order: number;
+        tasks: [
+          {
+            _id: string;
+            title: string;
+            description: string;
+            type: string;
+            content: any[];
+            isLocked: boolean;
+            relatedStep: number
+          }
+        ]
+      }
+    ]
+    currentDay: number;
+    isCompleted: boolean;
+  }
+
+  interface ITask {
+    _id: string;
+    title: string;
+    description: string;
+    type: string;
+    content: any[];
+    isLocked: boolean;
+    relatedStep: number
+  }
+
+  interface IFlashCard {
+    _id: string;
+    userId: string;
+    title: string;
+    description: string;
+    vocabulariesFlashCardId: IFlashCardVocabulary[];
+  }
+
+  interface IFlashCardVocabulary {
+    _id: string;
+    vocabulary: string;
+    meaning: string;
+    example: string;
+    pronunciation: string;
+    image: string;
+  }
+
+  interface IUploadFile {
+    statusCode: number;
+    message: string;
+    data: {
+      filename: string;
+      path: string;
+      url: string;
+    }
+  }
+
+  interface ISurvey {
+    toeicHistory: string;
+    readingLevel: string;
+    listeningLevel: string;
+    vocabularyLevel: string;
+    targetScore: number;
+    focus: string;
+    purpose: string;
+    studyTimePerDay: string;
+    studyTimePerWeek: string;
+    examGoal: string;
+    learningStyle: string;
+    studyPreference: string;
+    mentorSupportType: string;
+    occupation: string;
+    preferredStudyTime: string;
+  }
+
+}
+
