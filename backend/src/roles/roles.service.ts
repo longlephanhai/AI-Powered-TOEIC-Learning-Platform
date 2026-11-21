@@ -1,0 +1,92 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Role } from './schema/role.schema';
+import mongoose, { Model } from 'mongoose';
+import aqp from 'api-query-params';
+
+@Injectable()
+export class RolesService {
+
+  constructor(@InjectModel(Role.name) private roleModel: Model<Role>) { }
+
+
+  async create(createRoleDto: CreateRoleDto, user: IUser) {
+
+    const isExist = await this.roleModel.findOne({
+      name: createRoleDto.name
+    })
+    if (isExist) {
+      throw new BadRequestException("Role already exists. Please choose a different name.")
+    }
+
+    const newRole = await this.roleModel.create({
+      ...createRoleDto,
+      createdBy: {
+        _id: user._id,
+        email: user.email,
+      }
+    });
+    return newRole;
+  }
+
+  async findAll(currentPage: number, limit: number, qs: string) {
+    const { filter, sort, population } = aqp(qs);
+    delete filter.current;
+    delete filter.pageSize;
+    let offset = (+currentPage - 1) * (+limit);
+    let defaultLimit = +limit ? +limit : 100;
+    const totalItems = (await this.roleModel.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / defaultLimit);
+
+    const result = await this.roleModel.find(filter)
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort as any)
+      .select('-password')
+      .populate('permissions')
+      .exec();
+    return {
+      meta: {
+        current: currentPage, //trang hiện tại
+        pageSize: limit, //số lượng bản ghi đã lấy
+        pages: totalPages,  //tổng số trang với điều kiện query
+        total: totalItems // tổng số phần tử (số bản ghi)
+      },
+      result //kết quả query
+    }
+  }
+
+  async findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(`id không hợp lệ`)
+    }
+    return await this.roleModel.findById(id)
+      .populate({
+        path: 'permissions',
+        select: { _id: 1, apiPath: 1, name: 1, method: 1, module: 1 }
+      })
+
+  }
+
+  async update(id: string, updateRoleDto: UpdateRoleDto, user: IUser) {
+    const role = await this.roleModel.findById(id);
+    if (!role) {
+      throw new BadRequestException("Role not found");
+    }
+    const updatedRole = await this.roleModel.findByIdAndUpdate(id, {
+      ...updateRoleDto,
+      updatedBy: {
+        _id: user._id,
+        email: user.email,
+      },
+      updatedAt: new Date(),
+    }, { new: true });
+    return updatedRole;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} role`;
+  }
+}

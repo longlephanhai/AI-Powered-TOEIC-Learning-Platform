@@ -1,0 +1,46 @@
+import { Module } from '@nestjs/common';
+import { Part5MistakesService } from './part5-mistakes.service';
+import { Part5MistakesController } from './part5-mistakes.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ExamResult, ExamResultSchema } from 'src/exam-result/schema/exam-result.schema';
+import { Question, QuestionSchema } from 'src/question/schema/question.schema';
+import { Part5Module } from 'src/part5/part5.module';
+import { Part5, Part5Schema } from 'src/part5/schema/part5.schema';
+import { Part6, Part6Schema } from 'src/part6/schema/part6.schema';
+import { Part6Module } from 'src/part6/part6.module';
+import { Part7, Part7Schema } from 'src/part7/schema/part7.schema';
+import { Part7Module } from 'src/part7/part7.module';
+import { Part4, Part4Schema } from 'src/part4/schema/part4.schema';
+import { Part4Module } from 'src/part4/part4.module';
+import { Part3, Part3Schema } from 'src/part3/schema/part3.schema';
+import { Part3Module } from 'src/part3/part3.module';
+import { Part2, Part2Schema } from 'src/part2/schema/part2.schema';
+import { Part2Module } from 'src/part2/part2.module';
+import { Part1, Part1Schema } from 'src/part1/schema/part1.schema';
+import { Part1Module } from 'src/part1/part1.module';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: ExamResult.name, schema: ExamResultSchema },
+      { name: Question.name, schema: QuestionSchema },
+      { name: Part1.name, schema: Part1Schema },
+      { name: Part2.name, schema: Part2Schema },
+      { name: Part3.name, schema: Part3Schema },
+      { name: Part4.name, schema: Part4Schema },
+      { name: Part5.name, schema: Part5Schema },
+      { name: Part6.name, schema: Part6Schema },
+      { name: Part7.name, schema: Part7Schema },
+    ]),
+    Part1Module,
+    Part2Module,
+    Part3Module,
+    Part4Module,
+    Part5Module,
+    Part6Module,
+    Part7Module
+  ],
+  controllers: [Part5MistakesController],
+  providers: [Part5MistakesService],
+})
+export class Part5MistakesModule { }

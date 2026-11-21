@@ -1,0 +1,60 @@
+import { IsEmail, IsMongoId, IsNotEmpty, IsOptional } from "class-validator";
+import mongoose from "mongoose";
+
+export class CreateUserDto {
+  @IsNotEmpty({ message: "Full Name is required" })
+  fullName: string;
+
+  @IsNotEmpty({ message: "Age is required" })
+  age: number;
+
+  @IsNotEmpty({ message: "Email is required" })
+  @IsEmail({}, { message: "Invalid email format" })
+  email: string;
+
+  @IsNotEmpty({ message: "Password is required" })
+  password: string;
+
+  @IsNotEmpty({ message: "Phone number is required" })
+  phone: number;
+
+  @IsNotEmpty({ message: "Address is required" })
+  address: string;
+
+  @IsNotEmpty({ message: "Role is required" })
+  @IsMongoId({ message: 'Role must be a valid MongoDB ObjectId' })
+  role: mongoose.Schema.Types.ObjectId;
+
+  @IsOptional()
+  avatar: string;
+
+  @IsOptional()
+  targetScore: number;
+}
+
+export class RegisterUserDto {
+  @IsNotEmpty({ message: "Full Name is required" })
+  fullName: string;
+
+  @IsNotEmpty({ message: "Age is required" })
+  age: number;
+
+  @IsNotEmpty({ message: "Email is required" })
+  @IsEmail({}, { message: "Invalid email format" })
+  email: string;
+
+  @IsNotEmpty({ message: "Password is required" })
+  password: string;
+
+  @IsNotEmpty({ message: "Phone number is required" })
+  phone: number;
+
+  @IsNotEmpty({ message: "Address is required" })
+  address: string;
+
+  @IsOptional()
+  avatar: string;
+
+  @IsOptional()
+  targetScore: number;
+}
